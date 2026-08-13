@@ -38,6 +38,7 @@ def init_db() -> None:
             partial_products    TEXT DEFAULT '',
             products            TEXT DEFAULT '',
             invoice_numbers     TEXT DEFAULT '',
+            is_psg_rejected     TEXT DEFAULT '',
             status              TEXT DEFAULT 'pending',
             -- pending | director_approved | document_ready | rejected
             approve_token       TEXT UNIQUE NOT NULL,
@@ -63,6 +64,7 @@ def init_db() -> None:
         ("customer",               "TEXT DEFAULT ''"),
         ("products",               "TEXT DEFAULT ''"),
         ("invoice_numbers",        "TEXT DEFAULT ''"),
+        ("is_psg_rejected",        "TEXT DEFAULT ''"),
     ]:
         try:
             conn.execute(f"ALTER TABLE refund_requests ADD COLUMN {col} {definition}")
@@ -84,7 +86,7 @@ def insert_request(row: dict) -> None:
              hubspot_link, customer,
              bank_name, account_no,
              refund_amount, refund_reason, refund_type, partial_products,
-             products, invoice_numbers,
+             products, invoice_numbers, is_psg_rejected,
              status, approve_token, reject_token,
              hs_deal_id, created_at, updated_at)
         VALUES
@@ -93,7 +95,7 @@ def insert_request(row: dict) -> None:
              :hubspot_link, :customer,
              :bank_name, :account_no,
              :refund_amount, :refund_reason, :refund_type, :partial_products,
-             :products, :invoice_numbers,
+             :products, :invoice_numbers, :is_psg_rejected,
              'pending', :approve_token, :reject_token,
              :hs_deal_id, :created_at, :updated_at)
     """, row)

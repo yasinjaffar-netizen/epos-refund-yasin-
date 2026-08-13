@@ -55,6 +55,7 @@ const initialFields = {
   refund_reason:          "",
   refund_type:            "",
   partial_products:       "",
+  is_psg_rejected:        "",
 };
 
 const REQUIRED = [
@@ -562,6 +563,11 @@ export default function App() {
     if (errors.product_categories) setErrors((prev) => ({ ...prev, product_categories: "" }));
   }
 
+  function handlePsgRejectedSelect(value) {
+    setFields((prev) => ({ ...prev, is_psg_rejected: value }));
+    if (errors.is_psg_rejected) setErrors((prev) => ({ ...prev, is_psg_rejected: "" }));
+  }
+
   function handleInvoiceNumberChange(group, value) {
     setInvoiceNumbers((prev) => ({ ...prev, [group]: value }));
     const key = `invoice_${group}`;
@@ -610,6 +616,10 @@ export default function App() {
         newErrors[`invoice_${group}`] = `${INVOICE_GROUP_LABELS[group]} is required.`;
     });
 
+    if (activeInvoiceGroups.includes("PSG") && !fields.is_psg_rejected) {
+      newErrors.is_psg_rejected = "Please select Yes or No.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -651,6 +661,7 @@ export default function App() {
       partial_products:       partialProductsValue,
       products:                selectedProductCategories.join(", "),
       invoice_numbers:         invoiceNumbersValue,
+      is_psg_rejected:         fields.is_psg_rejected,
     };
 
     setSubmitting(true);
@@ -900,6 +911,23 @@ export default function App() {
               />
             </FieldGroup>
           ))}
+
+          {/* 7b. Is PSG Rejected? — shown only when PSG (Retail/FnB POS) applies */}
+          {activeInvoiceGroups.includes("PSG") && (
+            <FieldGroup label="Is PSG Rejected?" required error={errors.is_psg_rejected}
+              sublabel="Let us know if the customer's PSG grant application was rejected.">
+              <div className="toggle-buttons">
+                {[["Yes", "Yes"], ["No", "No"]].map(([val, lbl]) => (
+                  <button key={val} type="button"
+                    className={`toggle-btn${fields.is_psg_rejected === val ? " active" : ""}`}
+                    onClick={() => handlePsgRejectedSelect(val)}>
+                    <span className="toggle-radio"><span className="toggle-radio-dot" /></span>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </FieldGroup>
+          )}
 
           {/* 8. Refund amount — auto-filled, locked */}
           <FieldGroup label="8. Refund Amount" required error={errors.refund_amount}

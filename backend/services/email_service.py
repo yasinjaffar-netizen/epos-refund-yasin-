@@ -108,6 +108,7 @@ def send_director_approval_request(request: dict, approve_token: str, reject_tok
       <tr><td>Original Payment Info</td><td>{request.get("original_payment_info", "")}</td></tr>
       <tr><td>Product(s)</td><td>{request.get("products", "")}</td></tr>
       <tr><td>Invoice Number(s)</td><td>{request.get("invoice_numbers", "")}</td></tr>
+      {f'<tr><td>Is PSG Rejected?</td><td>{request["is_psg_rejected"]}</td></tr>' if request.get("is_psg_rejected") else ""}
       <tr><td>Refund Type</td><td>{_refund_type_label(request)}</td></tr>
       <tr><td>Refund Amount</td><td><strong>SGD {request["refund_amount"]}</strong></td></tr>
       <tr><td>Reason</td><td>{request["refund_reason"]}</td></tr>
@@ -185,6 +186,7 @@ def send_admin_notification(request: dict):
       <tr><td>Original Payment Info</td><td>{request.get("original_payment_info", "")}</td></tr>
       <tr><td>Product(s)</td><td>{request.get("products", "")}</td></tr>
       <tr><td>Invoice Number(s)</td><td>{request.get("invoice_numbers", "")}</td></tr>
+      {f'<tr><td>Is PSG Rejected?</td><td>{request["is_psg_rejected"]}</td></tr>' if request.get("is_psg_rejected") else ""}
       <tr><td>Refund Type</td><td>{_refund_type_label(request)}</td></tr>
       <tr><td>Refund Amount</td><td><strong>SGD {request["refund_amount"]}</strong></td></tr>
       <tr><td>Reason</td><td>{request["refund_reason"]}</td></tr>
@@ -314,6 +316,7 @@ def send_finance_notification(request: dict, download_url: str):
       <tr><td>Original Payment Info</td><td>{request.get("original_payment_info", "")}</td></tr>
       <tr><td>Product(s)</td><td>{request.get("products", "")}</td></tr>
       <tr><td>Invoice Number(s)</td><td>{request.get("invoice_numbers", "")}</td></tr>
+      {f'<tr><td>Is PSG Rejected?</td><td>{request["is_psg_rejected"]}</td></tr>' if request.get("is_psg_rejected") else ""}
       <tr><td>Refund Type</td><td>{_refund_type_label(request)}</td></tr>
       <tr><td>Refund Amount</td><td><strong>SGD {request["refund_amount"]}</strong></td></tr>
       <tr><td>Reason</td><td>{request["refund_reason"]}</td></tr>

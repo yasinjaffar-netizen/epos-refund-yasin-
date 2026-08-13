@@ -141,6 +141,7 @@ def submit_refund_request(
         "partial_products":       body.partial_products,
         "products":               body.products,
         "invoice_numbers":        body.invoice_numbers,
+        "is_psg_rejected":        body.is_psg_rejected,
         "approve_token":          app_token,
         "reject_token":           rej_token,
         "hs_deal_id":             body.deal_id,   # may be overwritten for partial below

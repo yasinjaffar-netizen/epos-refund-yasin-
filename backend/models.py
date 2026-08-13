@@ -23,6 +23,7 @@ class RefundRequestIn(BaseModel):
     partial_products:        str = ""
     products:                 str   # comma-joined list of selected product categories
     invoice_numbers:          str   # e.g. "Invoice Number (PSG): INV-123; Invoice Number (Website): INV-456"
+    is_psg_rejected:          str = ""   # "Yes" | "No" | "" (only applicable when PSG products involved)
 
     @field_validator("refund_amount")
     @classmethod
