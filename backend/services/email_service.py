@@ -102,8 +102,10 @@ def send_director_approval_request(request: dict, approve_token: str, reject_tok
     <table class="data-table">
       <tr><td>Sales Rep</td><td>{request["sales_rep_name"]}</td></tr>
       <tr><td>Deal Name</td><td>{request["deal_name"]}</td></tr>
+      <tr><td>Customer</td><td>{request.get("customer", "")}</td></tr>
       <tr><td>HubSpot Link</td><td><a href="{request.get("hubspot_link", "")}">{request.get("hubspot_link", "")}</a></td></tr>
       <tr><td>Original Payment Date</td><td>{request.get("original_payment_date", "")}</td></tr>
+      <tr><td>Original Payment Info</td><td>{request.get("original_payment_info", "")}</td></tr>
       <tr><td>Product(s)</td><td>{request.get("products", "")}</td></tr>
       <tr><td>Invoice Number(s)</td><td>{request.get("invoice_numbers", "")}</td></tr>
       <tr><td>Refund Type</td><td>{_refund_type_label(request)}</td></tr>
@@ -177,8 +179,10 @@ def send_admin_notification(request: dict):
     <table class="data-table">
       <tr><td>Deal Name</td><td>{request["deal_name"]}</td></tr>
       <tr><td>Sales Rep</td><td>{request["sales_rep_name"]}</td></tr>
+      <tr><td>Customer</td><td>{request.get("customer", "")}</td></tr>
       <tr><td>HubSpot Link</td><td><a href="{request.get("hubspot_link", "")}">{request.get("hubspot_link", "")}</a></td></tr>
       <tr><td>Original Payment Date</td><td>{request.get("original_payment_date", "")}</td></tr>
+      <tr><td>Original Payment Info</td><td>{request.get("original_payment_info", "")}</td></tr>
       <tr><td>Product(s)</td><td>{request.get("products", "")}</td></tr>
       <tr><td>Invoice Number(s)</td><td>{request.get("invoice_numbers", "")}</td></tr>
       <tr><td>Refund Type</td><td>{_refund_type_label(request)}</td></tr>
@@ -304,8 +308,10 @@ def send_finance_notification(request: dict, download_url: str):
     <table class="data-table">
       <tr><td>Deal Name</td><td>{request["deal_name"]}</td></tr>
       <tr><td>Sales Rep</td><td>{request["sales_rep_name"]}</td></tr>
+      <tr><td>Customer</td><td>{request.get("customer", "")}</td></tr>
       <tr><td>HubSpot Link</td><td><a href="{request.get("hubspot_link", "")}">{request.get("hubspot_link", "")}</a></td></tr>
       <tr><td>Original Payment Date</td><td>{request.get("original_payment_date", "")}</td></tr>
+      <tr><td>Original Payment Info</td><td>{request.get("original_payment_info", "")}</td></tr>
       <tr><td>Product(s)</td><td>{request.get("products", "")}</td></tr>
       <tr><td>Invoice Number(s)</td><td>{request.get("invoice_numbers", "")}</td></tr>
       <tr><td>Refund Type</td><td>{_refund_type_label(request)}</td></tr>

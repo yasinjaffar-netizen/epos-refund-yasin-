@@ -27,7 +27,9 @@ def init_db() -> None:
             deal_id             TEXT NOT NULL,
             deal_name           TEXT NOT NULL,
             original_payment_date TEXT DEFAULT '',
+            original_payment_info TEXT DEFAULT '',
             hubspot_link        TEXT DEFAULT '',
+            customer            TEXT DEFAULT '',
             bank_name           TEXT NOT NULL,
             account_no          TEXT NOT NULL,
             refund_amount       TEXT NOT NULL,
@@ -56,7 +58,9 @@ def init_db() -> None:
         ("uploaded_doc_path",      "TEXT DEFAULT ''"),
         ("uploaded_at",            "TEXT DEFAULT ''"),
         ("original_payment_date",  "TEXT DEFAULT ''"),
+        ("original_payment_info",  "TEXT DEFAULT ''"),
         ("hubspot_link",           "TEXT DEFAULT ''"),
+        ("customer",               "TEXT DEFAULT ''"),
         ("products",               "TEXT DEFAULT ''"),
         ("invoice_numbers",        "TEXT DEFAULT ''"),
     ]:
@@ -76,7 +80,8 @@ def insert_request(row: dict) -> None:
     conn.execute("""
         INSERT INTO refund_requests
             (id, sales_rep_name, sales_rep_id, sales_rep_email,
-             deal_id, deal_name, original_payment_date, hubspot_link,
+             deal_id, deal_name, original_payment_date, original_payment_info,
+             hubspot_link, customer,
              bank_name, account_no,
              refund_amount, refund_reason, refund_type, partial_products,
              products, invoice_numbers,
@@ -84,7 +89,8 @@ def insert_request(row: dict) -> None:
              hs_deal_id, created_at, updated_at)
         VALUES
             (:id, :sales_rep_name, :sales_rep_id, :sales_rep_email,
-             :deal_id, :deal_name, :original_payment_date, :hubspot_link,
+             :deal_id, :deal_name, :original_payment_date, :original_payment_info,
+             :hubspot_link, :customer,
              :bank_name, :account_no,
              :refund_amount, :refund_reason, :refund_type, :partial_products,
              :products, :invoice_numbers,

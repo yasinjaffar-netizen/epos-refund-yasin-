@@ -43,27 +43,31 @@ const SG_BANKS = [
 ];
 
 const initialFields = {
-  sales_rep:            "",
-  deal_id:              "",
-  original_payment_date:"",
-  hubspot_link:          "",
-  bank_name:            "",
-  account_no:           "",
-  refund_amount:        "",
-  refund_reason:        "",
-  refund_type:          "",
-  partial_products:     "",
+  sales_rep:              "",
+  deal_id:                "",
+  original_payment_date:  "",
+  original_payment_info:  "",
+  hubspot_link:            "",
+  customer:               "",
+  bank_name:              "",
+  account_no:             "",
+  refund_amount:          "",
+  refund_reason:          "",
+  refund_type:            "",
+  partial_products:       "",
 };
 
 const REQUIRED = [
-  "sales_rep", "deal_id", "original_payment_date", "hubspot_link",
-  "bank_name", "account_no", "refund_amount", "refund_reason", "refund_type",
+  "sales_rep", "deal_id", "original_payment_date", "original_payment_info", "hubspot_link",
+  "customer", "bank_name", "account_no", "refund_amount", "refund_reason", "refund_type",
 ];
 const FIELD_LABELS = {
   sales_rep:             "Deal Owner",
   deal_id:               "Deal",
   original_payment_date: "Original Payment Date",
+  original_payment_info: "Original Payment Info",
   hubspot_link:          "HubSpot Link",
+  customer:              "Customer",
   bank_name:             "Bank Name",
   account_no:            "Account No.",
   refund_amount:         "Refund Amount",
@@ -636,7 +640,9 @@ export default function App() {
       deal_id:                fields.deal_id,
       deal_name:              selectedDeal?.name || "",
       original_payment_date:  fields.original_payment_date,
+      original_payment_info:  fields.original_payment_info,
       hubspot_link:           fields.hubspot_link,
+      customer:               fields.customer,
       bank_name:              fields.bank_name,
       account_no:             fields.account_no,
       refund_amount:          fields.refund_amount,
@@ -777,8 +783,20 @@ export default function App() {
             />
           </FieldGroup>
 
-          {/* 4. HubSpot Link */}
-          <FieldGroup label="4. HubSpot Link" required error={errors.hubspot_link}>
+          {/* 4. Original Payment Info */}
+          <FieldGroup label="4. Original Payment Info" required error={errors.original_payment_info}>
+            <input
+              type="text"
+              name="original_payment_info"
+              value={fields.original_payment_info}
+              onChange={handleChange}
+              className={errors.original_payment_info ? "has-error" : ""}
+              placeholder="e.g. payment method / reference"
+            />
+          </FieldGroup>
+
+          {/* 5. HubSpot Link */}
+          <FieldGroup label="5. HubSpot Link" required error={errors.hubspot_link}>
             <input
               type="text"
               name="hubspot_link"
@@ -799,8 +817,8 @@ export default function App() {
 
           <hr className="section-divider" />
 
-          {/* 5. Refund type */}
-          <FieldGroup label="5. Refund Type" required error={errors.refund_type}>
+          {/* 6. Refund type */}
+          <FieldGroup label="6. Refund Type" required error={errors.refund_type}>
             <div className="toggle-buttons">
               {[["full", "Full Refund"], ["partial", "Partial Refund"]].map(([val, lbl]) => (
                 <button key={val} type="button"
@@ -813,7 +831,7 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 5a. Products (partial refund only) */}
+          {/* 6a. Products (partial refund only) */}
           {fields.refund_type === "partial" && (
             <FieldGroup
               label="Select Product(s) for Partial Refund"
@@ -849,9 +867,9 @@ export default function App() {
             </FieldGroup>
           )}
 
-          {/* 6. Product(s) */}
+          {/* 7. Product(s) */}
           <FieldGroup
-            label="6. Product(s)"
+            label="7. Product(s)"
             required
             error={errors.product_categories}
             sublabel="Select the product(s) this refund relates to."
@@ -865,7 +883,7 @@ export default function App() {
             />
           </FieldGroup>
 
-          {/* 6a. Invoice Number(s) — shown per selected product category */}
+          {/* 7a. Invoice Number(s) — shown per selected product category */}
           {activeInvoiceGroups.map((group) => (
             <FieldGroup
               key={group}
@@ -883,8 +901,8 @@ export default function App() {
             </FieldGroup>
           ))}
 
-          {/* 7. Refund amount — auto-filled, locked */}
-          <FieldGroup label="7. Refund Amount" required error={errors.refund_amount}
+          {/* 8. Refund amount — auto-filled, locked */}
+          <FieldGroup label="8. Refund Amount" required error={errors.refund_amount}
             sublabel={
               !fields.refund_type ? "Select a refund type above to auto-calculate." :
               fields.refund_type === "full" ? "Auto-filled from deal value." :
@@ -906,8 +924,20 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 8. Bank Name */}
-          <FieldGroup label="8. Bank Name" required error={errors.bank_name}>
+          {/* 9. Customer */}
+          <FieldGroup label="9. Customer" required error={errors.customer}>
+            <input
+              type="text"
+              name="customer"
+              value={fields.customer}
+              onChange={handleChange}
+              className={errors.customer ? "has-error" : ""}
+              placeholder="Customer / company name"
+            />
+          </FieldGroup>
+
+          {/* 10. Bank Name */}
+          <FieldGroup label="10. Bank Name" required error={errors.bank_name}>
             <div className="select-wrap">
               <select
                 name="bank_name"
@@ -923,10 +953,10 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 9. Account No. or PayNow — shown conditionally */}
+          {/* 11. Account No. or PayNow — shown conditionally */}
           {fields.bank_name && (
             <FieldGroup
-              label={isPayNow ? "9. PayNow No." : "9. Account No."}
+              label={isPayNow ? "11. PayNow No." : "11. Account No."}
               required
               error={errors.account_no}
             >
@@ -941,8 +971,8 @@ export default function App() {
             </FieldGroup>
           )}
 
-          {/* 10. Refund reason */}
-          <FieldGroup label="10. Refund Reason" required error={errors.refund_reason}>
+          {/* 12. Refund reason */}
+          <FieldGroup label="12. Refund Reason" required error={errors.refund_reason}>
             <textarea name="refund_reason" value={fields.refund_reason}
               onChange={handleChange} className={errors.refund_reason ? "has-error" : ""}
               placeholder="Explain the reason for this refund request" />

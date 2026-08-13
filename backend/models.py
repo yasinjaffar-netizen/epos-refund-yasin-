@@ -12,7 +12,9 @@ class RefundRequestIn(BaseModel):
     deal_id:                str
     deal_name:              str
     original_payment_date:  str   # ISO date (YYYY-MM-DD); validated below
+    original_payment_info:  str
     hubspot_link:            str
+    customer:               str
     bank_name:              str
     account_no:              str
     refund_amount:            str   # keep as string; validated below
@@ -48,7 +50,7 @@ class RefundRequestIn(BaseModel):
             raise ValueError("hubspot_link must be a valid URL")
         return v
 
-    @field_validator("sales_rep_name", "deal_id", "deal_name",
+    @field_validator("sales_rep_name", "deal_id", "deal_name", "original_payment_info", "customer",
                      "bank_name", "account_no", "refund_reason", "products", "invoice_numbers")
     @classmethod
     def must_not_be_empty(cls, v: str) -> str:
