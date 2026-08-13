@@ -61,6 +61,7 @@ const initialFields = {
 const REQUIRED = [
   "sales_rep", "deal_id", "original_payment_date", "original_payment_info", "hubspot_link",
   "customer", "bank_name", "account_no", "refund_amount", "refund_reason", "refund_type",
+  "is_psg_rejected",
 ];
 const FIELD_LABELS = {
   sales_rep:             "Deal Owner",
@@ -73,6 +74,7 @@ const FIELD_LABELS = {
   account_no:            "Account No.",
   refund_amount:         "Refund Amount",
   refund_reason:         "Refund Reason",
+  is_psg_rejected:       "Is PSG Rejected?",
   refund_type:           "Refund Type",
 };
 
@@ -616,10 +618,6 @@ export default function App() {
         newErrors[`invoice_${group}`] = `${INVOICE_GROUP_LABELS[group]} is required.`;
     });
 
-    if (activeInvoiceGroups.includes("PSG") && !fields.is_psg_rejected) {
-      newErrors.is_psg_rejected = "Please select Yes or No.";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -912,25 +910,22 @@ export default function App() {
             </FieldGroup>
           ))}
 
-          {/* 7b. Is PSG Rejected? — shown only when PSG (Retail/FnB POS) applies */}
-          {activeInvoiceGroups.includes("PSG") && (
-            <FieldGroup label="Is PSG Rejected?" required error={errors.is_psg_rejected}
-              sublabel="Let us know if the customer's PSG grant application was rejected.">
-              <div className="toggle-buttons">
-                {[["Yes", "Yes"], ["No", "No"]].map(([val, lbl]) => (
-                  <button key={val} type="button"
-                    className={`toggle-btn${fields.is_psg_rejected === val ? " active" : ""}`}
-                    onClick={() => handlePsgRejectedSelect(val)}>
-                    <span className="toggle-radio"><span className="toggle-radio-dot" /></span>
-                    {lbl}
-                  </button>
-                ))}
-              </div>
-            </FieldGroup>
-          )}
+          {/* 8. Is PSG Rejected? */}
+          <FieldGroup label="8. Is PSG Rejected?" required error={errors.is_psg_rejected}>
+            <div className="toggle-buttons">
+              {[["Yes", "Yes"], ["No", "No"]].map(([val, lbl]) => (
+                <button key={val} type="button"
+                  className={`toggle-btn${fields.is_psg_rejected === val ? " active" : ""}`}
+                  onClick={() => handlePsgRejectedSelect(val)}>
+                  <span className="toggle-radio"><span className="toggle-radio-dot" /></span>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </FieldGroup>
 
-          {/* 8. Refund amount — auto-filled, locked */}
-          <FieldGroup label="8. Refund Amount" required error={errors.refund_amount}
+          {/* 9. Refund amount — auto-filled, locked */}
+          <FieldGroup label="9. Refund Amount" required error={errors.refund_amount}
             sublabel={
               !fields.refund_type ? "Select a refund type above to auto-calculate." :
               fields.refund_type === "full" ? "Auto-filled from deal value." :
@@ -952,8 +947,8 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 9. Customer */}
-          <FieldGroup label="9. Customer" required error={errors.customer}>
+          {/* 10. Customer */}
+          <FieldGroup label="10. Customer" required error={errors.customer}>
             <input
               type="text"
               name="customer"
@@ -964,8 +959,8 @@ export default function App() {
             />
           </FieldGroup>
 
-          {/* 10. Bank Name */}
-          <FieldGroup label="10. Bank Name" required error={errors.bank_name}>
+          {/* 11. Bank Name */}
+          <FieldGroup label="11. Bank Name" required error={errors.bank_name}>
             <div className="select-wrap">
               <select
                 name="bank_name"
@@ -981,26 +976,24 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 11. Account No. or PayNow — shown conditionally */}
-          {fields.bank_name && (
-            <FieldGroup
-              label={isPayNow ? "11. PayNow No." : "11. Account No."}
-              required
-              error={errors.account_no}
-            >
-              <input
-                type="text"
-                name="account_no"
-                value={fields.account_no}
-                onChange={handleChange}
-                className={errors.account_no ? "has-error" : ""}
-                placeholder={isPayNow ? "Mobile number or UEN" : "Bank account number"}
-              />
-            </FieldGroup>
-          )}
+          {/* 12. Account No. or PayNow */}
+          <FieldGroup
+            label={isPayNow ? "12. PayNow No." : "12. Account No."}
+            required
+            error={errors.account_no}
+          >
+            <input
+              type="text"
+              name="account_no"
+              value={fields.account_no}
+              onChange={handleChange}
+              className={errors.account_no ? "has-error" : ""}
+              placeholder={isPayNow ? "Mobile number or UEN" : "Bank account number"}
+            />
+          </FieldGroup>
 
-          {/* 12. Refund reason */}
-          <FieldGroup label="12. Refund Reason" required error={errors.refund_reason}>
+          {/* 13. Refund reason */}
+          <FieldGroup label="13. Refund Reason" required error={errors.refund_reason}>
             <textarea name="refund_reason" value={fields.refund_reason}
               onChange={handleChange} className={errors.refund_reason ? "has-error" : ""}
               placeholder="Explain the reason for this refund request" />
