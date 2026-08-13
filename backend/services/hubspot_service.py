@@ -10,6 +10,7 @@ All functions are synchronous — called from FastAPI background tasks
 or directly from route handlers.
 """
 import os
+import re
 import httpx
 from typing import Optional
 
@@ -43,6 +44,16 @@ def _headers() -> dict:
         "Authorization": f"Bearer {HS_TOKEN}",
         "Content-Type":  "application/json",
     }
+
+
+def extract_deal_id_from_link(url: str) -> str:
+    """
+    Best-effort extraction of a HubSpot deal's numeric object ID from its URL.
+    The BD now types the deal name freely, so this is the only reliable way
+    to recover the real deal_id needed for stage/status automation.
+    """
+    match = re.search(r"/deal/(\d+)", url) or re.search(r"(\d{6,})", url)
+    return match.group(1) if match else ""
 
 
 # ── Deal search ───────────────────────────────────────────────────────────────

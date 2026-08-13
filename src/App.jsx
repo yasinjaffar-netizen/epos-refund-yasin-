@@ -74,7 +74,7 @@ const FIELD_LABELS = {
   account_no:            "Account No.",
   refund_amount:         "Refund Amount",
   refund_reason:         "Refund Reason",
-  is_psg_rejected:       "Is PSG Rejected?",
+  is_psg_rejected:       "Is PSG Approved?",
   refund_type:           "Refund Type",
 };
 
@@ -108,16 +108,6 @@ const INVOICE_GROUP_LABELS = {
   "Digital Marketing": "Invoice Number (Digital Marketing)",
   "Hardware":          "Invoice Number (Hardware)",
 };
-
-function sumProducts(selectedNames, products) {
-  if (!selectedNames.length) return "";
-  const total = selectedNames.reduce((sum, name) => {
-    const p = products.find((x) => x.name === name);
-    const val = parseFloat((p?.amount || "0").replace(/,/g, ""));
-    return sum + (isNaN(val) ? 0 : val);
-  }, 0);
-  return total > 0 ? total.toFixed(2) : "";
-}
 
 // ── Reusable components ──────────────────────────────────────
 
@@ -177,115 +167,6 @@ function ProductCheckboxes({ products, selected, onToggle, loading, error }) {
           </div>
         );
       })}
-    </div>
-  );
-}
-
-// Hardware status → visual config
-const HW_CONFIG = {
-  "Not Deployed": { color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0", dot: "#22c55e" },
-  "Ongoing":      { color: "#b45309", bg: "#fffbeb", border: "#fde68a", dot: "#f59e0b" },
-  "Deployed":     { color: "#b91c1c", bg: "#fef2f2", border: "#fecaca", dot: "#ef4444" },
-};
-
-function HardwareCard({ status, loading }) {
-  if (loading) {
-    return (
-      <div className="hardware-card fade-in">
-        <div className="hardware-card-header">
-          <div className="hardware-card-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-            HARDWARE STATUS
-          </div>
-          <div className="hardware-loading">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-              style={{ animation: "spin 1s linear infinite" }}>
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-            Checking…
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!status) return null;
-
-  const cfg        = HW_CONFIG[status.status] || HW_CONFIG["Not Deployed"];
-  const isDeployed = status.status === "Deployed";
-
-  const fmtDate = (d) => {
-    if (!d) return null;
-    try {
-      return new Date(d).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" });
-    } catch { return d; }
-  };
-
-  return (
-    <div className="hardware-card fade-in" style={{ borderColor: cfg.border }}>
-      <div className="hardware-card-header">
-        <div className="hardware-card-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-          HARDWARE STATUS
-        </div>
-        <span className="hardware-status-badge"
-          style={{ background: cfg.bg, color: cfg.color, borderColor: cfg.border }}>
-          <span className="hardware-status-dot" style={{ background: cfg.dot }} />
-          {status.status}
-        </span>
-      </div>
-      {status.deployment_date ? (
-        <div className="hardware-card-date">
-          Deployment date: <strong>{fmtDate(status.deployment_date)}</strong>
-        </div>
-      ) : (
-        <div className="hardware-card-date">Deployment date: Not yet scheduled</div>
-      )}
-      {isDeployed && (
-        <div className="hardware-warning">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-            stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            style={{ flexShrink: 0, marginTop: 1 }}>
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          Hardware has been deployed for this deal. The BD can still submit a refund request for director review.
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Stage ID → card header colour
-const STAGE_COLOURS = {
-  "3243113153": "#59cc53",   // Payment Collected    → primary green
-  "3263420111": "#0a21ab",   // Closed Won (Auto)    → primary blue
-  "3243113154": "#0891b2",   // Payment Verified     → teal
-};
-
-function DealCard({ deal }) {
-  const colour = STAGE_COLOURS[deal.stage_id] || "#59cc53";
-  const ref    = `#${deal.id}`;
-
-  return (
-    <div className="deal-card fade-in">
-      <div className="deal-card-header" style={{ background: colour }}>
-        <span className="deal-card-ref">{ref}</span>
-        <span className="deal-card-badge">{deal.stage}</span>
-      </div>
-      <div className="deal-card-body">
-        <span className="deal-card-name">{deal.name}</span>
-        <span className="deal-card-amount">SGD {deal.amount}</span>
-      </div>
     </div>
   );
 }
@@ -433,69 +314,10 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError]     = useState("");
 
-  const [deals, setDeals]               = useState([]);
-  const [loadingDeals, setLoadingDeals] = useState(false);
-
-  const [dealProducts, setDealProducts]         = useState([]);   // [{name, amount}]
-  const [loadingProducts, setLoadingProducts]   = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState([]);   // ["POS Software", ...]
-
-  const [hardwareStatus, setHardwareStatus]     = useState(null);
-  const [loadingHardware, setLoadingHardware]   = useState(false);
-
   const [selectedProductCategories, setSelectedProductCategories] = useState([]);   // fixed "Product" field selections
   const [invoiceNumbers, setInvoiceNumbers]                       = useState({});   // { PSG: "...", Website: "...", ... }
 
-  // ── Fetch deals when rep changes ─────────────────────────
-  useEffect(() => {
-    if (!fields.sales_rep) {
-      setDeals([]);
-      return;
-    }
-    const rep = SALES_REPS.find((r) => r.name === fields.sales_rep);
-    if (!rep) return;
-
-    setLoadingDeals(true);
-    setApiError("");
-
-    fetch(`${API_BASE}/api/deals?owner_id=${rep.id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load deals");
-        return res.json();
-      })
-      .then((data) => setDeals(data))
-      .catch(() => setApiError("Could not load deals. Is the backend running?"))
-      .finally(() => setLoadingDeals(false));
-  }, [fields.sales_rep]);
-
-  // ── Fetch products + hardware status when deal changes ───
-  useEffect(() => {
-    if (!fields.deal_id) {
-      setDealProducts([]);
-      setSelectedProducts([]);
-      setHardwareStatus(null);
-      setLoadingHardware(false);
-      return;
-    }
-
-    setLoadingProducts(true);
-    fetch(`${API_BASE}/api/deals/${fields.deal_id}/products`)
-      .then((res) => res.ok ? res.json() : [])
-      .then((data) => setDealProducts(Array.isArray(data) ? data : []))
-      .catch(() => setDealProducts([]))
-      .finally(() => setLoadingProducts(false));
-
-    setLoadingHardware(true);
-    setHardwareStatus(null);
-    fetch(`${API_BASE}/api/deals/${fields.deal_id}/hardware-status`)
-      .then((res) => res.ok ? res.json() : null)
-      .then((data) => setHardwareStatus(data))
-      .catch(() => setHardwareStatus(null))
-      .finally(() => setLoadingHardware(false));
-  }, [fields.deal_id]);
-
-  const selectedDeal = deals.find((d) => d.id === fields.deal_id);
-  const isPayNow     = fields.bank_name === "PayNow";
+  const isPayNow = fields.bank_name === "PayNow";
 
   // Invoice-number field(s) to show, derived from the selected product(s)
   const activeInvoiceGroups = INVOICE_GROUP_ORDER.filter((group) =>
@@ -510,51 +332,13 @@ export default function App() {
   }
 
   function handleRepChange(e) {
-    setFields((prev) => ({ ...prev, sales_rep: e.target.value, deal_id: "", refund_amount: "" }));
-    setDealProducts([]);
-    setSelectedProducts([]);
-    setHardwareStatus(null);
+    setFields((prev) => ({ ...prev, sales_rep: e.target.value }));
     if (errors.sales_rep) setErrors((prev) => ({ ...prev, sales_rep: "" }));
   }
 
-  function handleDealChange(e) {
-    const newDealId = e.target.value;
-    const newDeal   = deals.find((d) => d.id === newDealId);
-    // Auto-fill amount if full refund already selected
-    const newAmount = fields.refund_type === "full" && newDeal?.amount
-      ? newDeal.amount.replace(/,/g, "")
-      : "";
-    setFields((prev) => ({ ...prev, deal_id: newDealId, refund_amount: newAmount }));
-    setSelectedProducts([]);
-    if (errors.deal_id) setErrors((prev) => ({ ...prev, deal_id: "" }));
-    if (errors.refund_amount) setErrors((prev) => ({ ...prev, refund_amount: "" }));
-  }
-
   function handleTypeSelect(type) {
-    let newAmount = "";
-    if (type === "full" && selectedDeal?.amount) {
-      newAmount = selectedDeal.amount.replace(/,/g, "");
-    } else if (type === "partial") {
-      newAmount = sumProducts(selectedProducts, dealProducts);
-    }
-    setFields((prev) => ({ ...prev, refund_type: type, refund_amount: newAmount }));
-    setSelectedProducts([]);
-    if (errors.refund_type)   setErrors((prev) => ({ ...prev, refund_type: "" }));
-    if (errors.refund_amount) setErrors((prev) => ({ ...prev, refund_amount: "" }));
-  }
-
-  function handleProductToggle(productName) {
-    const next = selectedProducts.includes(productName)
-      ? selectedProducts.filter((p) => p !== productName)
-      : [...selectedProducts, productName];
-    setSelectedProducts(next);
-    // Recalculate total from new selection
-    const newAmount = sumProducts(next, dealProducts);
-    setFields((prev) => ({ ...prev, refund_amount: newAmount }));
-    if (errors.partial_products)
-      setErrors((prev) => ({ ...prev, partial_products: "" }));
-    if (errors.refund_amount)
-      setErrors((prev) => ({ ...prev, refund_amount: "" }));
+    setFields((prev) => ({ ...prev, refund_type: type }));
+    if (errors.refund_type) setErrors((prev) => ({ ...prev, refund_type: "" }));
   }
 
   function handleProductCategoryToggle(productName) {
@@ -592,18 +376,6 @@ export default function App() {
         newErrors[key] = `${FIELD_LABELS[key]} is required.`;
     });
 
-    if (fields.refund_type === "partial") {
-      if (dealProducts.length > 0) {
-        // Checkbox mode — at least one must be ticked
-        if (selectedProducts.length === 0)
-          newErrors.partial_products = "Please select at least one product.";
-      } else {
-        // Free-text fallback
-        if (!fields.partial_products.trim())
-          newErrors.partial_products = "Please specify the product(s) for partial refund.";
-      }
-    }
-
     if (fields.refund_amount &&
         isNaN(Number(fields.refund_amount.toString().replace(/,/g, "")))) {
       newErrors.refund_amount = "Please enter a valid amount.";
@@ -629,14 +401,6 @@ export default function App() {
 
     const rep = SALES_REPS.find((r) => r.name === fields.sales_rep);
 
-    // Build the partial_products string
-    let partialProductsValue = "";
-    if (fields.refund_type === "partial") {
-      partialProductsValue = dealProducts.length > 0
-        ? selectedProducts.join(", ")
-        : fields.partial_products;
-    }
-
     const invoiceNumbersValue = activeInvoiceGroups
       .map((group) => `${INVOICE_GROUP_LABELS[group]}: ${invoiceNumbers[group]}`)
       .join("; ");
@@ -646,7 +410,7 @@ export default function App() {
       sales_rep_id:           rep?.id || "",
       sales_rep_email:        rep?.email || "",
       deal_id:                fields.deal_id,
-      deal_name:              selectedDeal?.name || "",
+      deal_name:              fields.deal_id,
       original_payment_date:  fields.original_payment_date,
       original_payment_info:  fields.original_payment_info,
       hubspot_link:           fields.hubspot_link,
@@ -656,7 +420,7 @@ export default function App() {
       refund_amount:          fields.refund_amount,
       refund_reason:          fields.refund_reason,
       refund_type:            fields.refund_type,
-      partial_products:       partialProductsValue,
+      partial_products:       fields.partial_products,
       products:                selectedProductCategories.join(", "),
       invoice_numbers:         invoiceNumbersValue,
       is_psg_rejected:         fields.is_psg_rejected,
@@ -684,9 +448,6 @@ export default function App() {
     setFields(initialFields);
     setErrors({});
     setApiError("");
-    setDeals([]);
-    setDealProducts([]);
-    setSelectedProducts([]);
     setSelectedProductCategories([]);
     setInvoiceNumbers({});
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -761,24 +522,15 @@ export default function App() {
 
           {/* 2. Deal */}
           <FieldGroup label="2. Deal" required error={errors.deal_id}
-            sublabel="Only your Closed Won and Payment Verified deals are shown.">
-            <div className="select-wrap">
-              <select
-                name="deal_id"
-                value={fields.deal_id}
-                onChange={handleDealChange}
-                disabled={!fields.sales_rep || loadingDeals}
-                className={[errors.deal_id ? "has-error" : "", fields.deal_id ? "has-value" : ""].join(" ").trim()}
-              >
-                <option value="">
-                  {!fields.sales_rep  ? "Select a deal owner first" :
-                   loadingDeals       ? "Loading deals…"            : "Select a deal"}
-                </option>
-                {deals.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-            </div>
+            sublabel="Please enter the exact deal name as it appears in HubSpot.">
+            <input
+              type="text"
+              name="deal_id"
+              value={fields.deal_id}
+              onChange={handleChange}
+              className={errors.deal_id ? "has-error" : ""}
+              placeholder="Deal name"
+            />
           </FieldGroup>
 
           {/* 3. Original Payment Date */}
@@ -800,7 +552,7 @@ export default function App() {
               value={fields.original_payment_info}
               onChange={handleChange}
               className={errors.original_payment_info ? "has-error" : ""}
-              placeholder="e.g. payment method / reference"
+              placeholder="e.g. Bank - Company Name on DD/MM/YY (Inv 00000 - $0.00)"
             />
           </FieldGroup>
 
@@ -815,14 +567,6 @@ export default function App() {
               placeholder="https://app.hubspot.com/contacts/.../deal/..."
             />
           </FieldGroup>
-
-          {/* Hardware status card — shown when deal is selected */}
-          {selectedDeal && (
-            <HardwareCard status={hardwareStatus} loading={loadingHardware} />
-          )}
-
-          {/* Deal card preview */}
-          {selectedDeal && <DealCard deal={selectedDeal} />}
 
           <hr className="section-divider" />
 
@@ -843,36 +587,16 @@ export default function App() {
           {/* 6a. Products (partial refund only) */}
           {fields.refund_type === "partial" && (
             <FieldGroup
-              label="Select Product(s) for Partial Refund"
-              required
+              label="Since it is Partial refund, Notify Quantity of Hardware if any:"
               error={errors.partial_products}
-              sublabel={
-                dealProducts.length > 0
-                  ? "Select the product(s) being refunded from this deal."
-                  : loadingProducts
-                  ? undefined
-                  : "No products found on this deal — type the product name(s) manually."
-              }
             >
-              {loadingProducts ? (
-                <ProductCheckboxes products={[]} selected={[]} onToggle={() => {}} loading={true} />
-              ) : dealProducts.length > 0 ? (
-                <ProductCheckboxes
-                  products={dealProducts}
-                  selected={selectedProducts}
-                  onToggle={handleProductToggle}
-                  loading={false}
-                  error={!!errors.partial_products}
-                />
-              ) : (
-                <textarea
-                  name="partial_products"
-                  value={fields.partial_products}
-                  onChange={handleChange}
-                  className={errors.partial_products ? "has-error" : ""}
-                  placeholder="e.g. Soundbox x1, Payment Terminal x2"
-                />
-              )}
+              <textarea
+                name="partial_products"
+                value={fields.partial_products}
+                onChange={handleChange}
+                className={errors.partial_products ? "has-error" : ""}
+                placeholder="e.g. Soundbox x1, Payment Terminal x2"
+              />
             </FieldGroup>
           )}
 
@@ -910,8 +634,8 @@ export default function App() {
             </FieldGroup>
           ))}
 
-          {/* 8. Is PSG Rejected? */}
-          <FieldGroup label="8. Is PSG Rejected?" required error={errors.is_psg_rejected}>
+          {/* 8. Is PSG Approved? */}
+          <FieldGroup label="8. Is PSG Approved?" required error={errors.is_psg_rejected}>
             <div className="toggle-buttons">
               {[["Yes", "Yes"], ["No", "No"]].map(([val, lbl]) => (
                 <button key={val} type="button"
@@ -924,31 +648,24 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 9. Refund amount — auto-filled, locked */}
-          <FieldGroup label="9. Refund Amount" required error={errors.refund_amount}
-            sublabel={
-              !fields.refund_type ? "Select a refund type above to auto-calculate." :
-              fields.refund_type === "full" ? "Auto-filled from deal value." :
-              "Auto-calculated from selected product(s)."
-            }>
+          {/* 9. Refund amount */}
+          <FieldGroup label="9. Refund Amount" required error={errors.refund_amount}>
             <div className="amount-wrap">
               <span className="amount-prefix">SGD</span>
               <input
                 type="text"
                 name="refund_amount"
                 value={fields.refund_amount}
-                readOnly
-                className={[
-                  errors.refund_amount ? "has-error" : "",
-                  fields.refund_amount ? "amount-autofilled" : "",
-                ].join(" ").trim()}
-                placeholder="Auto-calculated"
+                onChange={handleChange}
+                className={errors.refund_amount ? "has-error" : ""}
+                placeholder="Enter refund amount"
               />
             </div>
           </FieldGroup>
 
           {/* 10. Customer */}
-          <FieldGroup label="10. Customer" required error={errors.customer}>
+          <FieldGroup label="10. Customer" required error={errors.customer}
+            sublabel="Account Name (for Company Name if different from account name)">
             <input
               type="text"
               name="customer"

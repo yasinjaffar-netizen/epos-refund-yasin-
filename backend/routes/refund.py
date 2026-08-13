@@ -144,7 +144,10 @@ def submit_refund_request(
         "is_psg_rejected":        body.is_psg_rejected,
         "approve_token":          app_token,
         "reject_token":           rej_token,
-        "hs_deal_id":             body.deal_id,   # may be overwritten for partial below
+        # Deal is now typed freely by the BD, so recover the real HubSpot
+        # deal ID from the link for stage/status automation. Falls back to
+        # deal_id (may be overwritten for partial below).
+        "hs_deal_id":             hs.extract_deal_id_from_link(body.hubspot_link) or body.deal_id,
         "created_at":             now,
         "updated_at":             now,
     }
@@ -185,7 +188,7 @@ def _process_submission(row: dict, refund_type: str, partial_products: str):
       - Update / create HubSpot deal (stage + all refund properties in one call)
       - Email the Director
     """
-    deal_id = row["deal_id"]
+    deal_id = row["hs_deal_id"] or row["deal_id"]
 
     if refund_type == "full":
         # Single PATCH: stage + all refund properties
