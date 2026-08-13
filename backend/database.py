@@ -26,12 +26,16 @@ def init_db() -> None:
             sales_rep_email     TEXT NOT NULL,
             deal_id             TEXT NOT NULL,
             deal_name           TEXT NOT NULL,
+            original_payment_date TEXT DEFAULT '',
+            hubspot_link        TEXT DEFAULT '',
             bank_name           TEXT NOT NULL,
             account_no          TEXT NOT NULL,
             refund_amount       TEXT NOT NULL,
             refund_reason       TEXT NOT NULL,
             refund_type         TEXT NOT NULL,   -- 'full' | 'partial'
             partial_products    TEXT DEFAULT '',
+            products            TEXT DEFAULT '',
+            invoice_numbers     TEXT DEFAULT '',
             status              TEXT DEFAULT 'pending',
             -- pending | director_approved | document_ready | rejected
             approve_token       TEXT UNIQUE NOT NULL,
@@ -49,8 +53,12 @@ def init_db() -> None:
 
     # Migrate existing databases that pre-date these columns
     for col, definition in [
-        ("uploaded_doc_path", "TEXT DEFAULT ''"),
-        ("uploaded_at",       "TEXT DEFAULT ''"),
+        ("uploaded_doc_path",      "TEXT DEFAULT ''"),
+        ("uploaded_at",            "TEXT DEFAULT ''"),
+        ("original_payment_date",  "TEXT DEFAULT ''"),
+        ("hubspot_link",           "TEXT DEFAULT ''"),
+        ("products",               "TEXT DEFAULT ''"),
+        ("invoice_numbers",        "TEXT DEFAULT ''"),
     ]:
         try:
             conn.execute(f"ALTER TABLE refund_requests ADD COLUMN {col} {definition}")
@@ -68,14 +76,18 @@ def insert_request(row: dict) -> None:
     conn.execute("""
         INSERT INTO refund_requests
             (id, sales_rep_name, sales_rep_id, sales_rep_email,
-             deal_id, deal_name, bank_name, account_no,
+             deal_id, deal_name, original_payment_date, hubspot_link,
+             bank_name, account_no,
              refund_amount, refund_reason, refund_type, partial_products,
+             products, invoice_numbers,
              status, approve_token, reject_token,
              hs_deal_id, created_at, updated_at)
         VALUES
             (:id, :sales_rep_name, :sales_rep_id, :sales_rep_email,
-             :deal_id, :deal_name, :bank_name, :account_no,
+             :deal_id, :deal_name, :original_payment_date, :hubspot_link,
+             :bank_name, :account_no,
              :refund_amount, :refund_reason, :refund_type, :partial_products,
+             :products, :invoice_numbers,
              'pending', :approve_token, :reject_token,
              :hs_deal_id, :created_at, :updated_at)
     """, row)

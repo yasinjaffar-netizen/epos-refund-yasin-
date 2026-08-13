@@ -43,25 +43,63 @@ const SG_BANKS = [
 ];
 
 const initialFields = {
-  sales_rep:        "",
-  deal_id:          "",
-  bank_name:        "",
-  account_no:       "",
-  refund_amount:    "",
-  refund_reason:    "",
-  refund_type:      "",
-  partial_products: "",
+  sales_rep:            "",
+  deal_id:              "",
+  original_payment_date:"",
+  hubspot_link:          "",
+  bank_name:            "",
+  account_no:           "",
+  refund_amount:        "",
+  refund_reason:        "",
+  refund_type:          "",
+  partial_products:     "",
 };
 
-const REQUIRED = ["sales_rep", "deal_id", "bank_name", "account_no", "refund_amount", "refund_reason", "refund_type"];
+const REQUIRED = [
+  "sales_rep", "deal_id", "original_payment_date", "hubspot_link",
+  "bank_name", "account_no", "refund_amount", "refund_reason", "refund_type",
+];
 const FIELD_LABELS = {
-  sales_rep:     "Deal Owner",
-  deal_id:       "Deal",
-  bank_name:     "Bank Name",
-  account_no:    "Account No.",
-  refund_amount: "Refund Amount",
-  refund_reason: "Refund Reason",
-  refund_type:   "Refund Type",
+  sales_rep:             "Deal Owner",
+  deal_id:               "Deal",
+  original_payment_date: "Original Payment Date",
+  hubspot_link:          "HubSpot Link",
+  bank_name:             "Bank Name",
+  account_no:            "Account No.",
+  refund_amount:         "Refund Amount",
+  refund_reason:         "Refund Reason",
+  refund_type:           "Refund Type",
+};
+
+// Fixed product list for the "Product" field — distinct from the
+// HubSpot-driven partial-refund product checklist further down the form.
+const PRODUCTS = [
+  "Retail POS (Software)",
+  "FnB POS (Software)",
+  "Website",
+  "EPOS Rewards",
+  "Digital Marketing",
+  "Hardware",
+];
+
+// Which invoice-number field a product maps to.
+// Retail POS and FnB POS share the same "PSG" invoice number.
+const INVOICE_GROUP_MAP = {
+  "Retail POS (Software)": "PSG",
+  "FnB POS (Software)":    "PSG",
+  "Website":                "Website",
+  "EPOS Rewards":           "EPOS Rewards",
+  "Digital Marketing":      "Digital Marketing",
+  "Hardware":                "Hardware",
+};
+
+const INVOICE_GROUP_ORDER = ["PSG", "Website", "EPOS Rewards", "Digital Marketing", "Hardware"];
+const INVOICE_GROUP_LABELS = {
+  "PSG":               "Invoice Number (PSG)",
+  "Website":           "Invoice Number (Website)",
+  "EPOS Rewards":      "Invoice Number (EPOS Rewards)",
+  "Digital Marketing": "Invoice Number (Digital Marketing)",
+  "Hardware":          "Invoice Number (Hardware)",
 };
 
 function sumProducts(selectedNames, products) {
@@ -398,6 +436,9 @@ export default function App() {
   const [hardwareStatus, setHardwareStatus]     = useState(null);
   const [loadingHardware, setLoadingHardware]   = useState(false);
 
+  const [selectedProductCategories, setSelectedProductCategories] = useState([]);   // fixed "Product" field selections
+  const [invoiceNumbers, setInvoiceNumbers]                       = useState({});   // { PSG: "...", Website: "...", ... }
+
   // ── Fetch deals when rep changes ─────────────────────────
   useEffect(() => {
     if (!fields.sales_rep) {
@@ -448,6 +489,11 @@ export default function App() {
 
   const selectedDeal = deals.find((d) => d.id === fields.deal_id);
   const isPayNow     = fields.bank_name === "PayNow";
+
+  // Invoice-number field(s) to show, derived from the selected product(s)
+  const activeInvoiceGroups = INVOICE_GROUP_ORDER.filter((group) =>
+    selectedProductCategories.some((p) => INVOICE_GROUP_MAP[p] === group)
+  );
 
   // ── Handlers ──────────────────────────────────────────────
   function handleChange(e) {
@@ -504,6 +550,20 @@ export default function App() {
       setErrors((prev) => ({ ...prev, refund_amount: "" }));
   }
 
+  function handleProductCategoryToggle(productName) {
+    const next = selectedProductCategories.includes(productName)
+      ? selectedProductCategories.filter((p) => p !== productName)
+      : [...selectedProductCategories, productName];
+    setSelectedProductCategories(next);
+    if (errors.product_categories) setErrors((prev) => ({ ...prev, product_categories: "" }));
+  }
+
+  function handleInvoiceNumberChange(group, value) {
+    setInvoiceNumbers((prev) => ({ ...prev, [group]: value }));
+    const key = `invoice_${group}`;
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
+  }
+
   function handleBankChange(e) {
     const bank = e.target.value;
     setFields((prev) => ({ ...prev, bank_name: bank, account_no: "" }));
@@ -537,6 +597,15 @@ export default function App() {
       newErrors.refund_amount = "Please enter a valid amount.";
     }
 
+    if (selectedProductCategories.length === 0) {
+      newErrors.product_categories = "Please select at least one product.";
+    }
+
+    activeInvoiceGroups.forEach((group) => {
+      if (!(invoiceNumbers[group] || "").trim())
+        newErrors[`invoice_${group}`] = `${INVOICE_GROUP_LABELS[group]} is required.`;
+    });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -556,18 +625,26 @@ export default function App() {
         : fields.partial_products;
     }
 
+    const invoiceNumbersValue = activeInvoiceGroups
+      .map((group) => `${INVOICE_GROUP_LABELS[group]}: ${invoiceNumbers[group]}`)
+      .join("; ");
+
     const payload = {
-      sales_rep_name:   fields.sales_rep,
-      sales_rep_id:     rep?.id || "",
-      sales_rep_email:  rep?.email || "",
-      deal_id:          fields.deal_id,
-      deal_name:        selectedDeal?.name || "",
-      bank_name:        fields.bank_name,
-      account_no:       fields.account_no,
-      refund_amount:    fields.refund_amount,
-      refund_reason:    fields.refund_reason,
-      refund_type:      fields.refund_type,
-      partial_products: partialProductsValue,
+      sales_rep_name:         fields.sales_rep,
+      sales_rep_id:           rep?.id || "",
+      sales_rep_email:        rep?.email || "",
+      deal_id:                fields.deal_id,
+      deal_name:              selectedDeal?.name || "",
+      original_payment_date:  fields.original_payment_date,
+      hubspot_link:           fields.hubspot_link,
+      bank_name:              fields.bank_name,
+      account_no:             fields.account_no,
+      refund_amount:          fields.refund_amount,
+      refund_reason:          fields.refund_reason,
+      refund_type:            fields.refund_type,
+      partial_products:       partialProductsValue,
+      products:                selectedProductCategories.join(", "),
+      invoice_numbers:         invoiceNumbersValue,
     };
 
     setSubmitting(true);
@@ -595,6 +672,8 @@ export default function App() {
     setDeals([]);
     setDealProducts([]);
     setSelectedProducts([]);
+    setSelectedProductCategories([]);
+    setInvoiceNumbers({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -687,6 +766,29 @@ export default function App() {
             </div>
           </FieldGroup>
 
+          {/* 3. Original Payment Date */}
+          <FieldGroup label="3. Original Payment Date" required error={errors.original_payment_date}>
+            <input
+              type="date"
+              name="original_payment_date"
+              value={fields.original_payment_date}
+              onChange={handleChange}
+              className={errors.original_payment_date ? "has-error" : ""}
+            />
+          </FieldGroup>
+
+          {/* 4. HubSpot Link */}
+          <FieldGroup label="4. HubSpot Link" required error={errors.hubspot_link}>
+            <input
+              type="text"
+              name="hubspot_link"
+              value={fields.hubspot_link}
+              onChange={handleChange}
+              className={errors.hubspot_link ? "has-error" : ""}
+              placeholder="https://app.hubspot.com/contacts/.../deal/..."
+            />
+          </FieldGroup>
+
           {/* Hardware status card — shown when deal is selected */}
           {selectedDeal && (
             <HardwareCard status={hardwareStatus} loading={loadingHardware} />
@@ -697,8 +799,8 @@ export default function App() {
 
           <hr className="section-divider" />
 
-          {/* 3. Refund type */}
-          <FieldGroup label="3. Refund Type" required error={errors.refund_type}>
+          {/* 5. Refund type */}
+          <FieldGroup label="5. Refund Type" required error={errors.refund_type}>
             <div className="toggle-buttons">
               {[["full", "Full Refund"], ["partial", "Partial Refund"]].map(([val, lbl]) => (
                 <button key={val} type="button"
@@ -711,7 +813,7 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 3a. Products (partial refund only) */}
+          {/* 5a. Products (partial refund only) */}
           {fields.refund_type === "partial" && (
             <FieldGroup
               label="Select Product(s) for Partial Refund"
@@ -747,8 +849,42 @@ export default function App() {
             </FieldGroup>
           )}
 
-          {/* 4. Refund amount — auto-filled, locked */}
-          <FieldGroup label="4. Refund Amount" required error={errors.refund_amount}
+          {/* 6. Product(s) */}
+          <FieldGroup
+            label="6. Product(s)"
+            required
+            error={errors.product_categories}
+            sublabel="Select the product(s) this refund relates to."
+          >
+            <ProductCheckboxes
+              products={PRODUCTS.map((name) => ({ name }))}
+              selected={selectedProductCategories}
+              onToggle={handleProductCategoryToggle}
+              loading={false}
+              error={!!errors.product_categories}
+            />
+          </FieldGroup>
+
+          {/* 6a. Invoice Number(s) — shown per selected product category */}
+          {activeInvoiceGroups.map((group) => (
+            <FieldGroup
+              key={group}
+              label={INVOICE_GROUP_LABELS[group]}
+              required
+              error={errors[`invoice_${group}`]}
+            >
+              <input
+                type="text"
+                value={invoiceNumbers[group] || ""}
+                onChange={(e) => handleInvoiceNumberChange(group, e.target.value)}
+                className={errors[`invoice_${group}`] ? "has-error" : ""}
+                placeholder="e.g. INV-000123"
+              />
+            </FieldGroup>
+          ))}
+
+          {/* 7. Refund amount — auto-filled, locked */}
+          <FieldGroup label="7. Refund Amount" required error={errors.refund_amount}
             sublabel={
               !fields.refund_type ? "Select a refund type above to auto-calculate." :
               fields.refund_type === "full" ? "Auto-filled from deal value." :
@@ -770,8 +906,8 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 5. Bank Name */}
-          <FieldGroup label="5. Bank Name" required error={errors.bank_name}>
+          {/* 8. Bank Name */}
+          <FieldGroup label="8. Bank Name" required error={errors.bank_name}>
             <div className="select-wrap">
               <select
                 name="bank_name"
@@ -787,10 +923,10 @@ export default function App() {
             </div>
           </FieldGroup>
 
-          {/* 6. Account No. or PayNow — shown conditionally */}
+          {/* 9. Account No. or PayNow — shown conditionally */}
           {fields.bank_name && (
             <FieldGroup
-              label={isPayNow ? "6. PayNow No." : "6. Account No."}
+              label={isPayNow ? "9. PayNow No." : "9. Account No."}
               required
               error={errors.account_no}
             >
@@ -805,8 +941,8 @@ export default function App() {
             </FieldGroup>
           )}
 
-          {/* 7. Refund reason */}
-          <FieldGroup label="7. Refund Reason" required error={errors.refund_reason}>
+          {/* 10. Refund reason */}
+          <FieldGroup label="10. Refund Reason" required error={errors.refund_reason}>
             <textarea name="refund_reason" value={fields.refund_reason}
               onChange={handleChange} className={errors.refund_reason ? "has-error" : ""}
               placeholder="Explain the reason for this refund request" />

@@ -123,23 +123,27 @@ def submit_refund_request(
     rej_token   = str(uuid.uuid4())
 
     row = {
-        "id":               request_id,
-        "sales_rep_name":   body.sales_rep_name,
-        "sales_rep_id":     body.sales_rep_id,
-        "sales_rep_email":  body.sales_rep_email,
-        "deal_id":          body.deal_id,
-        "deal_name":        body.deal_name,
-        "bank_name":        body.bank_name,
-        "account_no":       body.account_no,
-        "refund_amount":    body.refund_amount,
-        "refund_reason":    body.refund_reason,
-        "refund_type":      body.refund_type,
-        "partial_products": body.partial_products,
-        "approve_token":    app_token,
-        "reject_token":     rej_token,
-        "hs_deal_id":       body.deal_id,   # may be overwritten for partial below
-        "created_at":       now,
-        "updated_at":       now,
+        "id":                     request_id,
+        "sales_rep_name":         body.sales_rep_name,
+        "sales_rep_id":           body.sales_rep_id,
+        "sales_rep_email":        body.sales_rep_email,
+        "deal_id":                body.deal_id,
+        "deal_name":              body.deal_name,
+        "original_payment_date":  body.original_payment_date,
+        "hubspot_link":           body.hubspot_link,
+        "bank_name":              body.bank_name,
+        "account_no":             body.account_no,
+        "refund_amount":          body.refund_amount,
+        "refund_reason":          body.refund_reason,
+        "refund_type":            body.refund_type,
+        "partial_products":       body.partial_products,
+        "products":               body.products,
+        "invoice_numbers":        body.invoice_numbers,
+        "approve_token":          app_token,
+        "reject_token":           rej_token,
+        "hs_deal_id":             body.deal_id,   # may be overwritten for partial below
+        "created_at":             now,
+        "updated_at":             now,
     }
 
     database.insert_request(row)
