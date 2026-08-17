@@ -637,7 +637,7 @@ export default function App() {
           {/* 8. Is PSG Approved? */}
           <FieldGroup label="8. Is PSG Approved?" required error={errors.is_psg_rejected}>
             <div className="toggle-buttons">
-              {[["Yes", "Yes"], ["No", "No"]].map(([val, lbl]) => (
+              {[["Yes", "Yes"], ["No", "No"], ["Not Applicable", "Not Applicable"]].map(([val, lbl]) => (
                 <button key={val} type="button"
                   className={`toggle-btn${fields.is_psg_rejected === val ? " active" : ""}`}
                   onClick={() => handlePsgRejectedSelect(val)}>
